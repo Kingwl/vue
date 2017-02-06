@@ -197,6 +197,59 @@ describe('Directive v-on', () => {
     expect(spy).toHaveBeenCalled()
   })
 
+  it('should support mouse modifier', () => {
+    const left = 1
+    const right = 2
+    const middle = 4
+    const spyLeft = jasmine.createSpy()
+    const spyRight = jasmine.createSpy()
+    const spyMiddle = jasmine.createSpy()
+    const spyMulti = jasmine.createSpy()
+
+    vm = new Vue({
+      el,
+      template: `
+        <div>
+          <div ref="left" @mousedown.left="foo">left</div>
+          <div ref="right" @mousedown.right="foo1">right</div>
+          <div ref="middle" @mousedown.middle="foo2">right</div>
+          <div ref="multi" @mousedown.left.right="foo3">multi</div>
+        </div>
+      `,
+      methods: {
+        foo: spyLeft,
+        foo1: spyRight,
+        foo2: spyMiddle,
+        foo3: spyMulti
+      }
+    })
+
+    triggerEvent(vm.$refs.left, 'mousedown', e => { e.buttons = right })
+    triggerEvent(vm.$refs.left, 'mousedown', e => { e.buttons = middle })
+    expect(spyLeft).not.toHaveBeenCalled()
+    triggerEvent(vm.$refs.left, 'mousedown', e => { e.buttons = left })
+    expect(spyLeft).toHaveBeenCalled()
+
+    triggerEvent(vm.$refs.right, 'mousedown', e => { e.buttons = left })
+    triggerEvent(vm.$refs.right, 'mousedown', e => { e.buttons = middle })
+    expect(spyRight).not.toHaveBeenCalled()
+    triggerEvent(vm.$refs.right, 'mousedown', e => { e.buttons = right })
+    expect(spyRight).toHaveBeenCalled()
+
+    triggerEvent(vm.$refs.middle, 'mousedown', e => { e.buttons = left })
+    triggerEvent(vm.$refs.middle, 'mousedown', e => { e.buttons = right })
+    expect(spyMiddle).not.toHaveBeenCalled()
+    triggerEvent(vm.$refs.middle, 'mousedown', e => { e.buttons = middle })
+    expect(spyMiddle).toHaveBeenCalled()
+
+    triggerEvent(vm.$refs.multi, 'mousedown', e => { e.buttons = left })
+    triggerEvent(vm.$refs.multi, 'mousedown', e => { e.buttons = right })
+    triggerEvent(vm.$refs.multi, 'mousedown', e => { e.buttons = middle })
+    expect(spyMulti).not.toHaveBeenCalled()
+    triggerEvent(vm.$refs.multi, 'mousedown', e => { e.buttons = left | right })
+    expect(spyMulti).toHaveBeenCalled()
+  })
+
   it('should support custom keyCode', () => {
     Vue.config.keyCodes.test = 1
     vm = new Vue({
